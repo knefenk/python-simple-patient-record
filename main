@@ -1,0 +1,416 @@
+
+def menu():
+    # Start of the function and printing option for patient to choose what they want to use
+    print("Welcome to the Vaccination Center!")
+    print("What would you like to do?")
+    print("1. New Patient Registration")
+    print("2. Vaccine Administration")
+    print("3. Search Patient Record")
+    print("4. Statistical Information on Patient Vaccinated")
+    print("0. Exit")
+    while True:
+        newPat = int(input("Enter the number according to the option you want to choose."
+                           "\nEnter your option:"))
+        #go to respective function that the patient select
+        #if the first option or New Patient Registration is chose by user, the PatientReg() function is called
+        if newPat == 1:
+            print("\n")
+            patientReg()
+            exit()
+        #if the second option or Vaccine Administration option is chose by user, the vaccineAd() is called
+        elif newPat == 2:
+            print("\n")
+            vaccineAd()
+            exit()
+        #if the third option or Search Patient Record option is chose by user,
+        # the searchPatientRecord() function is called
+        elif newPat == 3:
+            searchPatientRecord()
+            exit()
+        #if the forth option or Statistical Information on Patient Vaccinated option is chose by user,
+        #the statisticlaInformation() function is called
+        elif newPat == 4:
+            statisticalInformation()
+            exit()
+        #if the user chose 0 or the exit optinon,the program will stop
+        elif newPat == 0:
+            print("Thank you, have a nice day!")
+            exit()
+        else:
+            #Invalid input from user detect and bring to restart or end the function
+            print("Invalid input!")
+        cont = input("Press 'Enter' to restart or enter 'x' to exit:")
+        if cont == 'x':
+            print("Thank you, have a nice day!")
+            exit()
+        else:
+             pass
+
+#this function is called when the user chose the New Patient Registration option in menu()
+def patientReg():
+    counterPat = 0
+    while True:
+        #start fo Patient Registration function
+        print("Which vaccination center (VC) would you like to register under?:")
+
+        #prompt for input Vaccination Center
+        print("1.Vaccination center 1")
+        print("2.Vaccination center 2")
+
+        while True:
+            vacCenter = int(input("Enter '1' for Vaccination center 1, Enter '2'"
+                                  " for Vaccination center 2\nEnter your option:"))
+            try:
+                if vacCenter == 1 or vacCenter == 2:
+                    break
+            except:
+                print("Invalid Entry!")
+                continue
+
+
+        #Prompt for input like name, contact and age
+        name = input("Enter your name:")
+        contact = input("Enter your contact number:")
+
+        #make sure the age entered by user is valid to proceed by using try and except
+        while True:
+            age = (input("Enter your age (numerical):"))
+            try:
+                age = int(age)
+                break
+            except:
+                continue
+
+        #list out the vaccine type that the user eligible based on age
+        vacChoice = []
+        if age <= 11:
+            print("You are not eligible for vaccination!\n\n")
+            menu()
+        if age > 11:
+            vacChoice.extend(('AF', 'DM'))
+            if age <= 45:
+                vacChoice.append(('CZ'))
+        if age >= 18:
+            vacChoice.extend(('BV', 'EC'))
+
+        #sort the vaccine type according alphabetical order
+        vacChoice.sort()
+
+        #display the eligible vaccine type and prompt for vaccine type that user wish to inject
+        print("The vaccine that you are eligible to inject are:\n" + str(vacChoice))
+        vaccine = input("Enter the vaccine you wish to inject:")
+
+        #open patient.txt and read the first line, if first line is empty, counter in Patient ID will increase by 1,
+        # which keeps the patient ID always start with 001
+        filePat = open("patient.txt", "r")
+        char = filePat.read(1)
+        if not char:
+            counterPat = 1
+
+        #if there is already existing ID, read the 14 to 17th character of the last line and +1 to be use for latest
+        # patient ID
+        else:
+            for line in filePat:
+                counter = int(line[14:17])
+                counterPat = counter + 1
+
+        #patient ID will include the vaccine type and vaccination center that user chose,
+        # combined with the counterPat
+        patID = f"{vaccine}{vacCenter}{counterPat:03}"
+
+        #display of the vaccine that user chose and their patient ID
+        print("The vaccine you choose is", vaccine)
+        print("Your patient ID is:" + patID)
+
+        #patient status for this function is always NEW
+        statusPat = 'NEW'
+
+        #open patient.txt and append the information into it accordingly
+        filePat = open("patient.txt", "a")
+        filePat.write("Patient ID:" + patID + "\t")
+        filePat.write("Patient name:" + name + "\t")
+        filePat.write("Patient contact:" + contact + "\t")
+        filePat.write("Vaccination type:" + vaccine + "\t")
+        filePat.write("Vaccination Center " + str(vacCenter) + "\n")
+        filePat.close()
+
+        #open vaccination.txt and append the information needed into it accordingly
+        fileVac = open('vaccination.txt', 'a')
+        fileVac.write("Patient ID:" + patID + "\t")
+        fileVac.write("Vaccine Type:" + vaccine + "\t")
+        fileVac.write("VC" + str(vacCenter) + "\t")
+        fileVac.write("Status:" + statusPat + "\n")
+        fileVac.close()
+
+        #line to exit to the menu or stop the program
+        cont = input("Press 'Enter' to go back or press 'x' to exit:")
+        print("\n")
+        if cont == 'x':
+            print("The registration process is done!\nThank you, have a nice day!")
+            exit()
+        else:
+            menu()
+
+#this function is called in vaccine Ad() to check the validity of the patient ID
+def invalidID(idPat):
+
+    #open vaccination.txt to check if the ID is recorded inside
+    check = open("vaccination.txt", "r")
+
+    #testing is set as False at start
+    testing = False
+
+    #check if the Patient ID is in line or not
+    for lines in check:
+        if idPat in lines:
+
+            #if yes testing changed to true and will break the for loop
+            testing = True
+            break
+        else:
+            #the for loop will also stop when no same patient ID found in the txt file and go back to menu()
+            continue
+    if testing == False:
+        print("Invalid ID! Please check and retry\n\n")
+        menu()
+
+#this function is called when user entered 1 when the program prompt for dose numeber
+def firstDose(vaccineType):
+
+    #vaccineDate is set as 0 at start
+    vaccineDate = 0
+
+    #if vaccine type entered is EC, only 1 dose is required so the program will display vaccination is done and
+    # remind the user to only go out 14 days after the vaccination
+    if vaccineType == 'EC':
+        print("You are now injecting the first and final dose!"
+              " Please make sure you only go out 14 days after the vacciantion.")
+    else:
+
+    #if the vaccine type is AF,BV,CZ,DM, 2 dose is required so the program will display
+    # the days that the user should come back for second dose
+        if vaccineType == 'AF':
+            vaccineDate = '14'
+        elif vaccineType == 'BV' or vaccineType == 'CZ':
+            vaccineDate = '21'
+        elif vaccineType == 'DM':
+            vaccineDate = '28'
+        print("This will be your first dose of ", vaccineType, "please come back after", vaccineDate,
+              "days for your second dose!")
+
+#this function is called when user entered 2 when the program promopt for dose number
+def secondDose(vaccineType, idPat):
+
+    #if the vaccine type is EC, there is no second dose required so information will be displayed
+    if vaccineType == 'EC':
+        print("No second dose required for your current vaccine [EC]!")
+
+    #if the vaccine type is not EC, the vaccintaion status of the patient will be checked to confirm that the patient
+    # went through first dose before second dose
+    elif vaccineType != 'EC':
+        checkStat = open("vaccination.txt", "r")
+        search = "NEW"
+        testing = True
+        for line in checkStat:
+            if idPat in line:
+                if search in line:
+                    testing = False
+                    print("You must go through first dose before second dose!")
+                    break
+
+        #after the checking of vaccination status, if the patient is good to go, the program will display
+        # vaccination is done and advice the patient to only go out 14 days after vaccination
+        if testing == True:
+            print("You are now injecting the second and final dose!"
+                  " Please make sure you only go out 14 days after the vacciantion.")
+
+
+#this function is called when the user chose the Vaccine Administration option in menu()
+def vaccineAd():
+
+    #the program will prompt for patient ID
+    idPat = input("Enter Patient ID:\n")
+
+    #the invalidID(idPat) funtion is called to check the validity of Patient ID as mentioned above
+    invalidID(idPat)
+
+    #the vaccine type of the patient is determiend by the first two character as per Patient ID
+    while True:
+        vaccineType = idPat[0:2]
+        print("Your vaccine is", vaccineType)
+        #the program will prompt for dose number that the patient is going to inject
+        dose = int(input("Which dose are you going to inject?\n\t"
+                         "Enter '1' for first dose\n\tEnter '2' for your second dose\nEnter your option:"))
+        if dose == 1:
+
+            #if the dose number is 1, the firstDose(vaccineType) function is called
+            firstDose(vaccineType)
+
+            #if the vaccine type is EC, vaccination status is changed to COMPLETED, else it will change to COMPLETED-D1
+            if vaccineType != 'EC':
+                statusVac = 'COMPLETED-D1'
+            else:
+                statusVac = 'COMPLETED'
+        elif dose == 2:
+
+            #if the dose number is 2, the secondDose(vaccineType, idPat) function is called
+            secondDose(vaccineType, idPat)
+            statusVac = 'COMPLETED'
+        else:
+            #if user enter anything other than 1 or 2
+            print("Invalid input!")
+            break
+
+        #vaccination.txt is opened to read which line to edit
+        changeStat = open("vaccination.txt", "r")
+
+        #the lines in vaccination.txt is read in list form
+        listOfLines = changeStat.readlines()
+
+        #editLine is the number of line that the program need to edit and is determined by the number in Patient ID
+        editLine = int(idPat[4:6])
+
+        #since the text file start with line 0 and patient ID starts with 001,
+        # editLine need to minus 1 to go to the correct line
+        editLine = editLine - 1
+
+        #vacList will be the selected list to edit
+        vacList = listOfLines[editLine]
+
+        #vacList is then spilt into multiple element
+        vacList = vacList.split()
+
+        #the last element of vacList which is the vaccination status of patient is
+        # replace or change with the latest vaccination status of the patient
+        vacList[-1] = "Status:" + statusVac
+        changeStat.close()
+
+        #vaccintion.txt is closed and open for writing the changed line into the text file
+        changeStat = open('vaccination.txt', 'w')
+
+        # change list to string ,the \t and \n is added to vacList to make sure the format of
+        # vaccination.txt is the same as original
+        newList = '\t'.join(vacList) + "\n"
+
+        #the selected list is then return back
+        listOfLines[editLine] = newList
+
+        #the file will then write and update with the changed or latest vaccination status of the patient
+        changeStat.writelines(listOfLines)
+        changeStat.close()
+
+        #the program will prompt for input to let user stop the program or go back to menu()
+        cont = input("Press 'Enter' to go back or enter 'x' to exit:")
+        if cont == 'x':
+            print("Thank you, have a nice day!")
+            exit()
+        else:
+            menu()
+
+
+#this function is called when user chose the Search Patient Record option in menu()
+def searchPatientRecord():
+    while True:
+            testing = True
+
+            # the program will prompt for Patient ID
+            idPat = input("Please enter your patient ID:")
+
+            # the program will then proceed and search in vaccination.txt for
+            # patient's vaccination status according to patient  ID
+            searchPat = open("vaccination.txt", "r")
+
+            for line in searchPat:
+                if idPat in line:
+                    print(line)
+                    print("Your vaccination record is as shown above")
+                    testing = True
+                    break
+                else:
+                    testing = False
+            if testing == False:
+                print("No ID found")
+                pass
+            cont = input("Press 'Enter' to go back or enter 'x' to exit:")
+            if cont == 'x':
+                print("Thank you, have a nice day!")
+                exit()
+            else:
+                menu()
+
+
+#this function is called when user chose the Statistical Information on Patient Vaccinated option
+def statisticalInformation():
+
+    #all counter is set in start
+    counter1 = 0
+    counter1DoneD1 = 0
+    counter1DoneVac = 0
+    counter1UnVac = 0
+    counter2 = 0
+    counter2DoneD1 = 0
+    counter2DoneVac = 0
+    counter2UnVac = 0
+    search1D0 = 'Status:NEW'
+    search1D1 = 'Status:COMPLETED-D1'
+    search1D2 = 'Status:COMPLETED'
+
+    #vaccination.txt is opened to read data in it
+    stat = open("vaccination.txt", "r")
+
+    # the counter(s) will increase by 1 whenever the condition is fulfilled
+    searchVac1 = 'VC1'
+    for line in stat:
+        if searchVac1 in line:
+            counter1 = counter1 + 1
+            if search1D0 in line and searchVac1 in line:
+                counter1UnVac = counter1UnVac + 1
+            elif search1D1 in line and searchVac1 in line:
+                counter1DoneD1 = counter1DoneD1 + 1
+            elif search1D2 in line and searchVac1 in line:
+                counter1DoneVac = counter1DoneVac + 1
+    stat.close()
+
+    #vaccination.txt is closed and opened to read data in it
+    stat2 = open('vaccination.txt', 'r')
+
+    #the counter(s) will increase by 1 whenever the condition is fulfilled
+    searchVac2 = 'VC2'
+    for line in stat2:
+        if searchVac2 in line:
+            counter2 = counter2 + 1
+            if search1D0 in line and searchVac2 in line:
+                counter2UnVac = counter2UnVac + 1
+            elif search1D1 in line and searchVac2 in line:
+                counter2DoneD1 = counter2DoneD1 + 1
+            elif search1D2 in line and searchVac2 in line:
+                counter2DoneVac = counter2DoneVac + 1
+    stat2.close()
+
+    #text file is close to proceed to the print data step
+    # all data is printed in table form with data from the code above
+    print(f"{'-' * 52}")
+    print(f"{'|'}{'Vaccination center 1':^50}{'|'}")
+    print(f"{'|'}{'Total patient:':<40}{counter1:^10}{'|'}")
+    print(f"{'|'}{'Unvaccinated:':<40}{counter1UnVac:^10}{'|'}")
+    print(f"{'|'}{'Waiting for Dose 2:':<40}{counter1DoneD1:^10}{'|'}")
+    print(f"{'|'}{'Fully vaccinated:':<40}{counter1DoneVac:^10}{'|'}")
+    print(f"{'|'}{'-' * 50}{'|'}")
+    print(f"{'|'}{'Vaccination center 2':^50}{'|'}")
+    print(f"{'|'}{'Total Patient:':<40}{counter2:^10}{'|'}")
+    print(f"{'|'}{'Unvaccinated:':<40}{counter2UnVac:^10}{'|'}")
+    print(f"{'|'}{'Waiting for Dose 2:':<40}{counter2DoneD1:^10}{'|'}")
+    print(f"{'|'}{'Fully Vaccinated:':<40}{counter2DoneVac:^10}{'|'}")
+    print(f"{'-' * 52}")
+    print("\n")
+    cont = input("Press 'Enter' to go back or enter 'x' to exit:")
+    if cont == 'x':
+        print("Thank you, have a nice day!")
+        exit()
+    else:
+        menu()
+
+#-----------------------------------------------------------------------------------------------------------------------
+
+#main program
+menu()
